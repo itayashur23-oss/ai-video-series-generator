@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Key, Eye, EyeOff, Check, X, Shield, Trash2, ExternalLink } from 'lucide-react';
 import { Language } from '../types';
-import { API_KEY_STORAGE } from '../services/geminiService';
+import { API_KEY_STORAGE, VIDEO_API_KEY_STORAGE } from '../services/geminiService';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -14,6 +14,8 @@ interface ApiKeyModalProps {
 const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, lang, onKeyChange }) => {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
+  const [videoApiKey, setVideoApiKey] = useState('');
+  const [showVideoKey, setShowVideoKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [hasKey, setHasKey] = useState(false);
 
@@ -22,10 +24,13 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, lang, onKeyC
   useEffect(() => {
     if (isOpen) {
       const stored = localStorage.getItem(API_KEY_STORAGE) || '';
+      const storedVideo = localStorage.getItem(VIDEO_API_KEY_STORAGE) || '';
       setApiKey(stored);
+      setVideoApiKey(storedVideo);
       setHasKey(!!stored);
       setSaved(false);
       setShowKey(false);
+      setShowVideoKey(false);
     }
   }, [isOpen]);
 
@@ -33,6 +38,11 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, lang, onKeyC
     const trimmed = apiKey.trim();
     if (trimmed) {
       localStorage.setItem(API_KEY_STORAGE, trimmed);
+      if (videoApiKey.trim()) {
+        localStorage.setItem(VIDEO_API_KEY_STORAGE, videoApiKey.trim());
+      } else {
+        localStorage.removeItem(VIDEO_API_KEY_STORAGE);
+      }
       setHasKey(true);
       setSaved(true);
       onKeyChange?.(true);
@@ -45,7 +55,9 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, lang, onKeyC
 
   const handleClear = () => {
     localStorage.removeItem(API_KEY_STORAGE);
+    localStorage.removeItem(VIDEO_API_KEY_STORAGE);
     setApiKey('');
+    setVideoApiKey('');
     setHasKey(false);
     onKeyChange?.(false);
   };
@@ -100,10 +112,11 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, lang, onKeyC
           </span>
         </div>
 
-        {/* Input */}
+        {/* Primary API Key */}
         <div className="space-y-2">
-          <label className="text-sm text-slate-300 font-medium block">
-            {isHe ? 'הכנס מפתח API' : 'Enter API Key'}
+          <label className="text-sm text-slate-300 font-medium flex items-center gap-2">
+            <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded">{isHe ? 'פרומפטים / טקסט' : 'Prompts / Text'}</span>
+            {isHe ? 'מפתח API ראשי' : 'Primary API Key'}
           </label>
           <div className="relative">
             <input
@@ -131,6 +144,34 @@ const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, lang, onKeyC
             <ExternalLink className="w-3 h-3" />
             {isHe ? 'קבל מפתח חינמי ב-Google AI Studio' : 'Get a free key at Google AI Studio'}
           </a>
+        </div>
+
+        {/* Video API Key */}
+        <div className="space-y-2">
+          <label className="text-sm text-slate-300 font-medium flex items-center gap-2">
+            <span className="bg-purple-500/20 text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded">{isHe ? 'יצירת וידאו' : 'Video Generation'}</span>
+            {isHe ? 'מפתח API לוידאו' : 'Video API Key'}
+          </label>
+          <div className="relative">
+            <input
+              type={showVideoKey ? 'text' : 'password'}
+              value={videoApiKey}
+              onChange={e => setVideoApiKey(e.target.value)}
+              placeholder={isHe ? 'AIza... (ריק = שימוש במפתח הראשי)' : 'AIza... (empty = use primary key)'}
+              dir="ltr"
+              className={`w-full bg-slate-800 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all ${isHe ? 'pr-4 pl-12' : 'pl-4 pr-12'}`}
+              onKeyDown={e => e.key === 'Enter' && handleSave()}
+            />
+            <button
+              onClick={() => setShowVideoKey(s => !s)}
+              className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1 ${isHe ? 'left-3' : 'right-3'}`}
+            >
+              {showVideoKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-500">
+            {isHe ? '💡 אם ריק — המפתח הראשי ישמש גם לוידאו' : '💡 If empty — primary key is used for video too'}
+          </p>
         </div>
 
         {/* Buttons */}

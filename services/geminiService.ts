@@ -4,12 +4,21 @@ import { Episode, Scene, SeriesConfig, Language, Genre, VisualStyle, TargetEngin
 
 // API key is stored exclusively in browser localStorage — never in source code
 export const API_KEY_STORAGE = 'storystream_apikey';
+export const VIDEO_API_KEY_STORAGE = 'storystream_video_apikey';
 
+// Text/prompt key
 const getApiKey = (): string =>
   localStorage.getItem(API_KEY_STORAGE) || (typeof process !== 'undefined' ? (process.env?.API_KEY ?? '') : '');
 
-// Helper to get a fresh AI instance using the localStorage-stored key
+// Video key — falls back to text key if not set separately
+const getVideoApiKey = (): string =>
+  localStorage.getItem(VIDEO_API_KEY_STORAGE) || getApiKey();
+
+// AI instance for text/prompt calls
 const getAI = () => new GoogleGenAI({ apiKey: getApiKey() });
+
+// AI instance for video generation
+const getVideoAI = () => new GoogleGenAI({ apiKey: getVideoApiKey() });
 
 /**
  * Utility to handle API retries with exponential backoff for 429 errors.
@@ -541,13 +550,13 @@ ENGINE NOTE: ${engineLogic}
   contents.push({ text: promptText });
 
   const responseStream = await ai.models.generateContentStream({
-      model: "gemini-2.5-pro",
+      model: "gemini-2.5-flash",
       contents: { parts: contents },
       config: {
         systemInstruction,
         responseMimeType: "application/json",
         responseSchema: schema,
-        thinkingConfig: { thinkingBudget: 32768 }
+        thinkingConfig: { thinkingBudget: 8192 }
       },
   });
 
@@ -625,7 +634,7 @@ export const generateEpisodeVideo = async (
     const hasKey = await window.aistudio.hasSelectedApiKey();
     if (!hasKey) await window.aistudio.openSelectKey();
   }
-  const ai = getAI();
+  const ai = getVideoAI();
   onStatusUpdate("Synthesizing context...");
 
   try {
@@ -670,13 +679,13 @@ export const generateEpisodeVideo = async (
 
       // Fetch video as a blob URL so the API key never appears in the DOM or src attributes
       try {
-        const videoResponse = await fetch(`${videoUri}&key=${getApiKey()}`);
+        const videoResponse = await fetch(`${videoUri}&key=${getVideoApiKey()}`);
         if (!videoResponse.ok) throw new Error(`Video fetch failed: ${videoResponse.status}`);
         const videoBlob = await videoResponse.blob();
         return URL.createObjectURL(videoBlob);
       } catch {
         // Fallback: return URI directly (key still goes through network, but not in DOM)
-        return `${videoUri}&key=${getApiKey()}`;
+        return `${videoUri}&key=${getVideoApiKey()}`;
       }
   } catch (error) { throw error; }
 };
