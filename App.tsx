@@ -11,11 +11,11 @@ import ApiKeyModal from './components/ApiKeyModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import OnboardingTooltip from './components/OnboardingTooltip';
 import { generateSeriesStructureStream, generateEpisodeVideo, generateSceneImage, generateSceneAudio, API_KEY_STORAGE } from './services/geminiService';
+import { onAuthChange, getCurrentSession, signOut as supabaseSignOut, supabaseUserToAppUser, saveUserPrefs } from './services/supabaseService';
 import { Film, Sparkles, Key, History, Globe, User as UserIcon, LogOut, CreditCard, Coins, Flame, CheckCircle, XCircle } from 'lucide-react';
 import { translations } from './translations';
 
 const HISTORY_KEY = 'storystream_history';
-const USER_KEY = 'storystream_user';
 
 const App: React.FC = () => {
   const [config, setConfig] = useState<SeriesConfig>({
@@ -63,11 +63,26 @@ const App: React.FC = () => {
     try {
       const saved = localStorage.getItem(HISTORY_KEY);
       if (saved) setHistory(JSON.parse(saved));
-      const savedUser = localStorage.getItem(USER_KEY);
-      if (savedUser) setUser(JSON.parse(savedUser));
     } catch (e) {
       console.error("Failed to load local storage", e);
     }
+    // Restore Supabase session on mount (handles page refresh + OAuth redirect)
+    getCurrentSession().then(session => {
+      if (session?.user) setUser(supabaseUserToAppUser(session.user));
+    });
+  }, []);
+
+  // Listen to auth state changes (sign-in, sign-out, Google OAuth redirect)
+  useEffect(() => {
+    const unsubscribe = onAuthChange((_event, sbUser) => {
+      if (sbUser) {
+        setUser(supabaseUserToAppUser(sbUser));
+        setIsAuthOpen(false);
+      } else {
+        setUser(null);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const saveToHistory = (newConfig: SeriesConfig, newEpisodes: Episode[]) => {
@@ -132,15 +147,9 @@ const App: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleLogin = (newUser: User) => {
-      const userWithTokens = { ...newUser, tokens: newUser.tokens || 50 }; 
-      setUser(userWithTokens);
-      localStorage.setItem(USER_KEY, JSON.stringify(userWithTokens));
-  };
-
   const handleLogout = () => {
+      supabaseSignOut(); // fire-and-forget; onAuthChange will clear state
       setUser(null);
-      localStorage.removeItem(USER_KEY);
   };
 
   const handleUpdatePlan = async (tier: PlanTier) => {
@@ -148,7 +157,7 @@ const App: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       const updatedUser = { ...user, plan: tier };
       setUser(updatedUser);
-      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      saveUserPrefs(updatedUser);
       setIsPricingOpen(false);
   };
 
@@ -157,7 +166,7 @@ const App: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       const updatedUser = { ...user, tokens: (user.tokens || 0) + amount };
       setUser(updatedUser);
-      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      saveUserPrefs(updatedUser);
       alert(`${amount} Tokens purchased!`);
   };
 
@@ -231,7 +240,7 @@ const App: React.FC = () => {
       const episode = episodes.find(e => e.id === episodeId);
       if (!episode) return;
       const scene = episode.scenes.find(s => s.id === sceneId);
-      if (!scene) return;
+      if (!scene || scene.status === 'generating_image') return;
 
       const promptToUse = (config.contentLanguage === 'he' && scene.hebrewVisualPrompt) ? scene.hebrewVisualPrompt : scene.visualPrompt;
 
@@ -250,7 +259,7 @@ const App: React.FC = () => {
       const episode = episodes.find(e => e.id === episodeId);
       if (!episode) return;
       const scene = episode.scenes.find(s => s.id === sceneId);
-      if (!scene || !scene.dialogue) return;
+      if (!scene || !scene.dialogue || scene.status === 'generating_audio') return;
 
       handleUpdateScene(episodeId, sceneId, { status: 'generating_audio' });
       try {
@@ -262,6 +271,16 @@ const App: React.FC = () => {
           const errorMsg = (errorStr.includes('quota') || errorStr.includes('resource_exhausted')) ? t.quotaExceeded : "Failed to generate audio";
           handleUpdateScene(episodeId, sceneId, { status: 'failed', error: errorMsg });
       }
+  };
+
+  const handleGenerateAllAudioForEpisode = async (episodeId: number) => {
+    const episode = episodes.find(e => e.id === episodeId);
+    if (!episode) return;
+    for (const scene of episode.scenes) {
+      if (scene.dialogue && !scene.audioUrl && scene.status !== 'generating_audio') {
+        await handleGenerateAudio(episodeId, scene.id);
+      }
+    }
   };
 
   const handleGenerateVideo = async (episodeId: number, sceneId: number) => {
@@ -319,7 +338,7 @@ const App: React.FC = () => {
       if (user) {
           const updatedUser = { ...user, tokens: Math.max(0, user.tokens - 10) };
           setUser(updatedUser);
-          localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+          saveUserPrefs(updatedUser);
       }
 
       handleUpdateScene(episodeId, sceneId, { status: 'completed', videoUrl, audioUrl });
@@ -347,7 +366,7 @@ const App: React.FC = () => {
     <ErrorBoundary>
     <OnboardingTooltip lang={lang} />
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onLogin={handleLogin} lang={lang} />
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} lang={lang} />
       <PricingModal isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)} onSelectPlan={handleUpdatePlan} onBuyTokens={handleBuyTokens} currentUser={user} lang={lang} />
       <TrendingModal isOpen={isTrendingOpen} onClose={() => setIsTrendingOpen(false)} lang={lang} onSelectTrend={handleSelectTrend} />
       <ApiKeyModal isOpen={isApiKeyOpen} onClose={() => setIsApiKeyOpen(false)} lang={lang} onKeyChange={setHasApiKey} />
@@ -476,6 +495,7 @@ const App: React.FC = () => {
                         onGenerate={handleGenerateVideo} 
                         onGenerateImage={handleGenerateSceneImage} 
                         onGenerateAudio={handleGenerateAudio}
+                        onGenerateAllAudio={handleGenerateAllAudioForEpisode}
                         onUpdateScene={handleUpdateScene} 
                         lang={lang} 
                     />

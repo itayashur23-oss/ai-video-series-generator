@@ -43,7 +43,15 @@ const SceneItem: React.FC<{
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const handleGenerateImageWithConfirm = () => {
+        if (scene.startImage) {
+            if (!window.confirm('Regenerate the scene image? The current image will be replaced.')) return;
+        }
+        onGenerateImage?.();
+    };
+
     const handleTranslate = async () => {
+        if (scene.hebrewVisualPrompt) return;
         setIsTranslating(true);
         try {
             const translated = await translateText(scene.visualPrompt, lang);
@@ -60,46 +68,41 @@ const SceneItem: React.FC<{
         setIsSyncing(true);
 
         const dialogueText = scene.dialogue.trim();
-        let currentPrompt = scene.visualPrompt;
+        const currentPrompt = scene.visualPrompt || '';
         const langLabel = config.contentLanguage === 'he' ? 'Hebrew' : 'English';
-        const replacementTag = `speaking the following text in ${langLabel}: "${dialogueText}"`;
+        const newSuffix = `The character speaking the following text in ${langLabel}: "${dialogueText}".`;
 
-        // Catch ALL variations the AI might generate:
-        // 1. says in Hebrew/English: "..." or '...'
-        // 2. speaking the following text in Hebrew/English: "..." or '...'
-        // 3. says: "..." (without lang label)
-        // 4. speaks in Hebrew/English: "..." or '...'
-        // 5. Multi-line quotes (non-greedy, dotall)
-        const dialoguePatterns = [
-            // Full quoted patterns — greedy enough to get full quote content
-            /(?:says|speaks|speaking(?: the following text)?|said|utters?)(?: in (?:Hebrew|English))?[:\s]+["'«»„"‟"'‹›]([^"'«»„"‟"'‹›]*)["'«»„"‟"'‹›]/gi,
-            // Subtitle line pattern at end
-            /Render (?:all )?spoken text as.+?$/gim,
+        // Case-insensitive search using lowercase comparison
+        const lowerPrompt = currentPrompt.toLowerCase();
+
+        // Priority markers — find the LAST occurrence of any of these phrases
+        // (handles both AI-generated and our own previously-appended tags)
+        const candidateMarkers = [
+            'the character speaking the following text in',
+            'the character says the following text in',
+            'speaking the following text in hebrew',
+            'speaking the following text in english',
         ];
 
-        let newPrompt = currentPrompt;
-        let replaced = false;
-
-        // Try each pattern — replace ONLY the first match (the dialogue reference)
-        for (const pattern of dialoguePatterns) {
-            if (pattern.test(newPrompt)) {
-                pattern.lastIndex = 0; // reset after .test()
-                newPrompt = newPrompt.replace(pattern, replacementTag);
-                replaced = true;
-                break;
-            }
+        let cutIdx = -1;
+        for (const m of candidateMarkers) {
+            const i = lowerPrompt.lastIndexOf(m);
+            if (i !== -1 && i > cutIdx) cutIdx = i;
         }
 
-        // If no pattern matched, do a smart append (avoid double-adding)
-        if (!replaced) {
-            // Check if the actual dialogue text is already anywhere in the prompt
-            if (!newPrompt.includes(dialogueText)) {
-                newPrompt = `${newPrompt.trim()} The character ${replacementTag}.`;
-            } else {
-                // Text exists but in unknown format — leave prompt unchanged, dialogue field is the source of truth
-                newPrompt = currentPrompt;
-            }
+        // Fallback: regex for AI-embedded pattern like 'says in Hebrew: "..."'
+        // Uses explicit Unicode code points so encoding ambiguity doesn't matter
+        if (cutIdx === -1) {
+            const re = /(?:says?|shouts?|speaks?|speaking|said|utters?)\s+in\s+(?:Hebrew|English)/gi;
+            let m: RegExpExecArray | null;
+            let lastStart = -1;
+            while ((m = re.exec(currentPrompt)) !== null) lastStart = m.index;
+            if (lastStart !== -1) cutIdx = lastStart;
         }
+
+        const newPrompt = cutIdx !== -1
+            ? currentPrompt.slice(0, cutIdx).trimEnd() + ' ' + newSuffix
+            : currentPrompt.trimEnd() + ' ' + newSuffix;
 
         onUpdate({ visualPrompt: newPrompt });
         setTimeout(() => setIsSyncing(false), 800);
@@ -184,7 +187,7 @@ const SceneItem: React.FC<{
                 <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
                     {onGenerateImage && (scene.status === 'pending' || scene.status === 'generating_image' || scene.status === 'failed') && (
                         <button 
-                            onClick={onGenerateImage} 
+                            onClick={handleGenerateImageWithConfirm} 
                             disabled={scene.status === 'generating_image'}
                             className={`p-2 rounded-lg transition-colors border group relative ${
                                 scene.startImage 
@@ -245,7 +248,7 @@ const SceneItem: React.FC<{
                                         </button>
                                         {onGenerateImage && (
                                             <button 
-                                                onClick={onGenerateImage} 
+                                                onClick={handleGenerateImageWithConfirm} 
                                                 disabled={scene.status === 'generating_image'}
                                                 className="bg-amber-600 text-white p-2 rounded-lg text-xs font-bold hover:bg-amber-500 disabled:opacity-50" 
                                                 title={t.regenerateImage}
@@ -451,11 +454,12 @@ interface EpisodeCardProps {
   onGenerate: (episodeId: number, sceneId: number) => void;
   onGenerateImage?: (episodeId: number, sceneId: number) => void;
   onGenerateAudio?: (episodeId: number, sceneId: number) => void;
+  onGenerateAllAudio?: (episodeId: number) => void;
   onUpdateScene: (episodeId: number, sceneId: number, updates: Partial<Scene>) => void;
   lang: Language;
 }
 
-const EpisodeCard: React.FC<EpisodeCardProps> = ({ episode, config, onGenerate, onGenerateImage, onGenerateAudio, onUpdateScene, lang }) => {
+const EpisodeCard: React.FC<EpisodeCardProps> = ({ episode, config, onGenerate, onGenerateImage, onGenerateAudio, onGenerateAllAudio, onUpdateScene, lang }) => {
   const t = translations[lang];
 
   return (
@@ -475,6 +479,16 @@ const EpisodeCard: React.FC<EpisodeCardProps> = ({ episode, config, onGenerate, 
                 <UserCheck className="w-3.5 h-3.5 text-indigo-400" />
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.consistencyBadge}</span>
              </div>
+             {onGenerateAllAudio && config.includeDialogue && episode.scenes.some(s => s.dialogue) && (
+                 <button
+                     onClick={() => onGenerateAllAudio(episode.id)}
+                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 border border-blue-800/50 text-xs font-bold transition-colors"
+                     title="Generate audio for all scenes in this episode"
+                 >
+                     <Headphones className="w-3.5 h-3.5" />
+                     <span className="hidden sm:inline">All Audio</span>
+                 </button>
+             )}
         </div>
       </div>
 

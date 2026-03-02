@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { Language, User } from '../types';
+import { Language } from '../types';
+import { signUpWithEmail, signInWithEmail, signInWithGoogle } from '../services/supabaseService';
 import { translations } from '../translations';
 import { X, Mail, Lock, User as UserIcon, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (user: User) => void;
   lang: Language;
 }
 
@@ -20,55 +20,50 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, lang }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, lang }) => {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
   
   const t = translations[lang];
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-        const mockUser: User = {
-            id: 'u_' + Math.random().toString(36).substr(2, 9),
-            email,
-            name: isLoginMode ? (email.split('@')[0]) : name,
-            plan: 'free', // Default plan
-            tokens: 50 // Default tokens
-        };
-        onLogin(mockUser);
-        setIsLoading(false);
-        onClose();
-        // Reset form
-        setEmail('');
-        setPassword('');
-        setName('');
-    }, 1500);
+    setAuthError(null);
+    try {
+      if (isLoginMode) {
+        await signInWithEmail(email, password);
+      } else {
+        await signUpWithEmail(email, password, name);
+      }
+      // onAuthChange in App.tsx handles updating user state
+      setEmail('');
+      setPassword('');
+      setName('');
+      onClose();
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-        const mockUser: User = {
-            id: 'u_google_' + Math.random().toString(36).substr(2, 9),
-            email: 'user@gmail.com',
-            name: 'Google User',
-            plan: 'free',
-            tokens: 50 // Default tokens
-        };
-        onLogin(mockUser);
-        setIsLoading(false);
-        onClose();
-    }, 1500);
+    setAuthError(null);
+    try {
+      await signInWithGoogle();
+      // Will redirect to Google — session handled by onAuthChange after redirect
+    } catch (err: any) {
+      setAuthError(err.message || 'Google sign-in failed.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,6 +99,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin, lang })
                 <span className="text-xs text-slate-500 font-medium">{t.orDivider}</span>
                 <div className="h-px bg-slate-700 flex-1"></div>
             </div>
+
+            {authError && (
+              <div className="bg-red-900/30 border border-red-500/40 text-red-300 text-sm rounded-lg px-4 py-3 mb-2">
+                {authError}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLoginMode && (

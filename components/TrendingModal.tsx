@@ -1,5 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
+
+const TRENDING_CACHE_KEY = 'storystream_trending_cache';
+const TRENDING_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 import { Language } from '../types';
 import { translations } from '../translations';
 import { fetchTrendingInsights, TrendingResult, TrendItem } from '../services/geminiService';
@@ -18,11 +21,24 @@ const TrendingModal: React.FC<TrendingModalProps> = ({ isOpen, onClose, lang, on
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const t = translations[lang];
 
-  const loadTrends = async () => {
+  const loadTrends = async (forceRefresh = false) => {
+    if (!forceRefresh) {
+      try {
+        const cached = localStorage.getItem(TRENDING_CACHE_KEY);
+        if (cached) {
+          const { timestamp, data: cachedData } = JSON.parse(cached);
+          if (Date.now() - timestamp < TRENDING_CACHE_TTL) {
+            setData(cachedData);
+            return;
+          }
+        }
+      } catch {}
+    }
     setIsLoading(true);
     try {
       const result = await fetchTrendingInsights(lang);
       setData(result);
+      localStorage.setItem(TRENDING_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), data: result }));
     } catch (error) {
       console.error("Failed to fetch trends", error);
     } finally {
@@ -138,7 +154,7 @@ const TrendingModal: React.FC<TrendingModalProps> = ({ isOpen, onClose, lang, on
         {/* Footer Actions */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between gap-4">
             <button 
-                onClick={loadTrends}
+                onClick={() => loadTrends(true)}
                 disabled={isLoading}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium transition-colors"
             >

@@ -587,6 +587,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ config, setConfig, onSubmit, isLo
   const conceptImageInputRef = useRef<HTMLInputElement>(null);
   const startImageInputRef = useRef<HTMLInputElement>(null);
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false);
+  const lastIdeaTimeRef = useRef<number>(0);
   const [urlInputs, setUrlInputs] = useState<Record<string, string>>({});
   const [loadingUrls, setLoadingUrls] = useState<Record<string, boolean>>({});
   const [showPresets, setShowPresets] = useState(false);
@@ -798,6 +799,8 @@ const SetupForm: React.FC<SetupFormProps> = ({ config, setConfig, onSubmit, isLo
   };
 
   const handleRandomIdea = async () => {
+    if (Date.now() - lastIdeaTimeRef.current < 3000) return;
+    lastIdeaTimeRef.current = Date.now();
     setIsGeneratingIdea(true);
     try {
       const idea = await generateRandomSeriesIdea(config.genre, config.contentLanguage);
