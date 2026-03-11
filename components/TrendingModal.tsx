@@ -146,7 +146,7 @@ const TrendingModal: React.FC<TrendingModalProps> = ({ isOpen, onClose, lang, on
                 </div>
             ) : (
                 <div className="text-center text-slate-500 py-10">
-                    Failed to load trends.
+                    {t.failedToLoadTrends}
                 </div>
             )}
         </div>

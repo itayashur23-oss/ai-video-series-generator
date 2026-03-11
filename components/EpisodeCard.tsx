@@ -17,6 +17,56 @@ const POSES = [
     { id: 'surprised', label: { en: 'Surprised', he: 'הפתעה' }, prompt: { en: 'Character looks shocked, eyes wide open.', he: 'הדמות נראית המומה, עיניים פעורות.' } },
 ];
 
+/**
+ * Displays a visualPrompt with the [IMG]...[/IMG] block highlighted in amber.
+ * Click to switch to editable textarea mode.
+ */
+const HighlightedPrompt: React.FC<{
+    value: string;
+    onChange: (v: string) => void;
+}> = ({ value, onChange }) => {
+    const [editing, setEditing] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (editing) textareaRef.current?.focus();
+    }, [editing]);
+
+    if (editing) {
+        return (
+            <textarea
+                ref={textareaRef}
+                className="w-full bg-slate-950/50 border border-indigo-500 rounded-lg p-3 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[120px] leading-relaxed font-mono"
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                onBlur={() => setEditing(false)}
+                dir="ltr"
+            />
+        );
+    }
+
+    const imgRegex = /(\[IMG\][\s\S]*?\[\/IMG\])/i;
+    const parts = value.split(imgRegex);
+
+    return (
+        <div
+            className="w-full bg-slate-950/50 border border-slate-800 hover:border-slate-600 rounded-lg p-3 text-xs text-slate-300 min-h-[120px] leading-relaxed font-mono cursor-text whitespace-pre-wrap break-words transition-colors"
+            onClick={() => setEditing(true)}
+            title="Click to edit"
+            dir="ltr"
+        >
+            {parts.length === 1 && !value && (
+                <span className="text-slate-600">Edit visual prompt in English...</span>
+            )}
+            {parts.map((part, i) =>
+                imgRegex.test(part)
+                    ? <span key={i} className="bg-amber-900/40 text-amber-200 rounded-sm border-x border-amber-700/50">{part}</span>
+                    : <span key={i}>{part}</span>
+            )}
+        </div>
+    );
+};
+
 const SceneItem: React.FC<{ 
     scene: Scene, 
     contentLanguage: Language,
@@ -170,28 +220,30 @@ const SceneItem: React.FC<{
             )}
 
             {/* Header Area */}
-            <div className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="bg-slate-800 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-slate-700 shadow-inner">
-                        <span className="text-slate-500 font-bold text-sm">#{scene.id}</span>
+            <div className="p-3 sm:p-4 flex flex-col gap-2">
+                {/* Row 1: badge + title + status */}
+                <div className="flex items-start gap-3 min-w-0">
+                    <div className="bg-slate-800 w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 border border-slate-700 shadow-inner">
+                        <span className="text-slate-500 font-bold text-xs sm:text-sm">#{scene.id}</span>
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                             <h4 className="font-bold text-slate-200 text-sm truncate">{scene.description}</h4>
-                             {getStatusBadge()}
+                        <div className="flex items-start gap-2 mb-1 flex-wrap">
+                            <h4 className="font-bold text-slate-200 text-sm leading-snug line-clamp-3 flex-1 min-w-0">{scene.description}</h4>
+                            <div className="shrink-0">{getStatusBadge()}</div>
                         </div>
                         <p className="text-xs text-slate-500 line-clamp-1 italic">{scene.visualPrompt}</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+                {/* Row 2: action buttons */}
+                <div className="flex items-center gap-2 justify-end flex-wrap">
                     {onGenerateImage && (scene.status === 'pending' || scene.status === 'generating_image' || scene.status === 'failed') && (
-                        <button 
-                            onClick={handleGenerateImageWithConfirm} 
+                        <button
+                            onClick={handleGenerateImageWithConfirm}
                             disabled={scene.status === 'generating_image'}
-                            className={`p-2 rounded-lg transition-colors border group relative ${
-                                scene.startImage 
-                                ? 'bg-amber-900/20 hover:bg-amber-900/40 text-amber-400 border-amber-800/50' 
+                            className={`p-2 rounded-lg transition-colors border shrink-0 ${
+                                scene.startImage
+                                ? 'bg-amber-900/20 hover:bg-amber-900/40 text-amber-400 border-amber-800/50'
                                 : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
                             }`}
                             title={scene.startImage ? t.regenerateImage : t.genImageBtn}
@@ -203,23 +255,23 @@ const SceneItem: React.FC<{
                             )}
                         </button>
                     )}
-                    <button 
+                    <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg transition-colors border border-slate-700"
+                        className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg transition-colors border border-slate-700 shrink-0"
                     >
                         {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                     </button>
-                    <button 
+                    <button
                         onClick={onGenerate}
                         disabled={scene.status === 'generating' || scene.status === 'generating_image' || scene.status === 'generating_audio'}
-                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-lg ${
-                            scene.status === 'completed' 
-                            ? 'bg-green-600 hover:bg-green-500 text-white shadow-green-900/20' 
+                        className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all shadow-lg whitespace-nowrap ${
+                            scene.status === 'completed'
+                            ? 'bg-green-600 hover:bg-green-500 text-white shadow-green-900/20'
                             : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/30'
                         }`}
                     >
                         {scene.status === 'generating' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
-                        {scene.status === 'completed' ? t.videoReady : t.generateVideoBtn}
+                        <span>{scene.status === 'completed' ? t.videoReady : t.generateVideoBtn}</span>
                     </button>
                 </div>
             </div>
@@ -311,6 +363,7 @@ const SceneItem: React.FC<{
                                     <Edit3 className="w-3.5 h-3.5" /> {t.promptLabelAI}
                                 </label>
                                 <div className="flex items-center gap-1">
+                                    {!scene.hebrewVisualPrompt && (
                                     <button 
                                         onClick={handleTranslate}
                                         disabled={isTranslating}
@@ -319,6 +372,7 @@ const SceneItem: React.FC<{
                                         {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
                                         {t.translateBtn}
                                     </button>
+                                    )}
                                     <button 
                                         onClick={() => setShowPoses(!showPoses)}
                                         className="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded border border-slate-700 flex items-center gap-1 transition-all"
@@ -348,12 +402,9 @@ const SceneItem: React.FC<{
                                 </div>
                             )}
 
-                            <textarea 
-                                className="w-full bg-slate-950/50 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[120px] leading-relaxed font-mono"
+                            <HighlightedPrompt
                                 value={scene.visualPrompt}
-                                onChange={(e) => onUpdate({ visualPrompt: e.target.value })}
-                                placeholder="Edit visual prompt in English..."
-                                dir="ltr"
+                                onChange={(v) => onUpdate({ visualPrompt: v })}
                             />
 
                             {scene.hebrewVisualPrompt && (

@@ -22,6 +22,103 @@ interface LocalizedPreset {
 
 const CUSTOM_CHARS_KEY = 'storystream_custom_chars';
 
+// ─── Group definitions for filter chips ────────────────────────────────────────
+const CHARACTER_GROUPS: { id: string; label: Record<'he' | 'en', string> }[] = [
+  { id: 'all',       label: { he: '🌟 הכל',          en: '🌟 All'          } },
+  { id: 'modern',    label: { he: '👔 מודרני',        en: '👔 Modern'       } },
+  { id: 'animals',   label: { he: '🐾 חיות',          en: '🐾 Animals'      } },
+  { id: 'kids',      label: { he: '👶 ילדים',         en: '👶 Kids'         } },
+  { id: 'sports',    label: { he: '⚽ ספורט',         en: '⚽ Sports'       } },
+  { id: 'superhero', label: { he: '🦸 סופרהירואים',  en: '🦸 Superheroes'  } },
+  { id: 'anime',     label: { he: '🌀 אנימה',         en: '🌀 Anime'        } },
+  { id: 'minecraft', label: { he: '⛏️ מיינקראפט',   en: '⛏️ Minecraft'   } },
+  { id: 'roblox',    label: { he: '🎮 רובלוקס',      en: '🎮 Roblox'       } },
+  { id: 'gaming',    label: { he: '🕹️ גיימינג',      en: '🕹️ Gaming'      } },
+  { id: 'mythology', label: { he: '🏛️ מיתולוגיה',   en: '🏛️ Mythology'   } },
+];
+
+const GROUP_MAP: Record<string, string> = {
+  // Modern
+  "Casual Guy (Dan)": "modern", "The Arrogant Chef (Julian)": "modern",
+  "TV Host (Leo)": "modern", "TV Host (Maya)": "modern",
+  "Business Woman (Sarah)": "modern", "The Clockwork Collector (Oswald)": "modern",
+  "The Memory Merchant (Silt)": "modern", "The Doctor": "modern",
+  "Viral Streamer 'Pinky'": "modern", "Hypebeast Kai": "modern",
+  "K-Pop Star Jin": "modern", "Cosplay Queen Yuki": "modern",
+  "Old Money Aesthetic Tom": "modern", "Fitness Coach Maya": "modern",
+  "Gen Z Influencer Zoe": "modern", "Top Lawyer Harvey": "modern",
+  "Luxury Lifestyle Sophie": "modern", "Swimsuit Model Alex": "modern",
+  "Fashion Icon Bella": "modern", "Tech Mogul Elena": "modern",
+  "Cyberpunk Rebel": "modern", "Space Marine": "modern",
+  "Android Unit 7": "modern", "Old Wizard": "modern",
+  "Elven Archer": "modern", "Dwarf Warrior": "modern",
+  "Noir Detective": "modern", "The Survivor": "modern",
+  "Captain Glitch": "modern",
+  // Animals
+  "Chill Croc (Snap)": "animals", "Bubba the Skunk": "animals",
+  "Chubby Ginger Cat": "animals", "Baby Giraffe": "animals",
+  "Adventurous Pug": "animals", "Fluffy Bunny": "animals",
+  "Hipster Penguin": "animals",
+  // Minecraft
+  "Steve (Minecraft)": "minecraft", "Alex (Minecraft)": "minecraft",
+  "Iron Golem (Minecraft)": "minecraft", "Jesse (Minecraft Story Mode)": "minecraft",
+  "Tamed Wolf (Minecraft)": "minecraft", "Herobrine (Minecraft)": "minecraft",
+  "Ender Dragon (Minecraft)": "minecraft", "The Warden (Minecraft)": "minecraft",
+  "Charged Creeper (Minecraft)": "minecraft", "Wither Storm (Minecraft Story Mode)": "minecraft",
+  // Roblox
+  "Classic Noob (Roblox)": "roblox", "Bacon Hair (Roblox)": "roblox",
+  "Builderman (Roblox)": "roblox", "Zizzy (Roblox Piggy)": "roblox",
+  "The Guest (Roblox)": "roblox", "Penny Piggy (Roblox)": "roblox",
+  "Blue (Roblox Rainbow Friends)": "roblox", "1x1x1x1 (Roblox)": "roblox",
+  "Seek (Roblox Doors)": "roblox", "Figure (Roblox Doors)": "roblox",
+  // Gaming
+  "Jonesy (Fortnite)": "gaming", "Peely (Fortnite)": "gaming",
+  "Midas (Fortnite)": "gaming", "Red Crewmate (Among Us)": "gaming",
+  "Black Impostor (Among Us)": "gaming", "CJ (GTA San Andreas)": "gaming",
+  "Trevor (GTA V)": "gaming",
+  // Anime
+  "Naruto Uzumaki": "anime", "Sasuke Uchiha": "anime",
+  "Goku (Dragon Ball Z)": "anime", "Monkey D. Luffy (One Piece)": "anime",
+  "Roronoa Zoro (One Piece)": "anime", "Gojo Satoru (Jujutsu Kaisen)": "anime",
+  "Levi Ackerman (Attack on Titan)": "anime", "Vegeta (Dragon Ball Z)": "anime",
+  // Mythology
+  "Julius Caesar": "mythology", "Cleopatra": "mythology",
+  "Napoleon Bonaparte": "mythology", "Zeus (Greek Mythology)": "mythology",
+  "Anubis (Egyptian Mythology)": "mythology", "Thor (Norse Mythology)": "mythology",
+  "Athena (Greek Mythology)": "mythology",
+  // Superhero (new)
+  "Spider-Man": "superhero", "Iron Man": "superhero",
+  "Batman": "superhero", "Wonder Woman": "superhero", "Deadpool": "superhero",
+  // Sports (new)
+  "Lionel Messi": "sports", "Cristiano Ronaldo": "sports",
+  "LeBron James": "sports", "Michael Jordan": "sports", "Neymar Jr.": "sports",
+  // Kids (new)
+  "SpongeBob SquarePants": "kids", "Patrick Star": "kids",
+  "Ben 10 (Ben Tennyson)": "kids", "Bluey": "kids",
+  "JJ (Cocomelon)": "kids", "Dora the Explorer": "kids",
+  "Bobby the Bouncing Bear": "kids", "Luna the Rainbow Bunny": "kids",
+  "Ziggy the Zooming Zebra": "kids", "Poppy the Bubble Panda": "kids",
+  "Tiko the Giggle Turtle": "kids",
+  "Bubbles the Baby Brontosaurus": "kids", "Sunny the Smiling Stegosaurus": "kids",
+  "Peanut the Tiny T-Rex": "kids", "Lulu the Lavender Triceratops": "kids",
+  "Twinkle the Sparkle Pterodactyl": "kids",
+};
+
+const SUBGROUP_MAP: Record<string, 'hero' | 'villain'> = {
+  "Steve (Minecraft)": "hero", "Alex (Minecraft)": "hero",
+  "Iron Golem (Minecraft)": "hero", "Jesse (Minecraft Story Mode)": "hero",
+  "Tamed Wolf (Minecraft)": "hero",
+  "Herobrine (Minecraft)": "villain", "Ender Dragon (Minecraft)": "villain",
+  "The Warden (Minecraft)": "villain", "Charged Creeper (Minecraft)": "villain",
+  "Wither Storm (Minecraft Story Mode)": "villain",
+  "Classic Noob (Roblox)": "hero", "Bacon Hair (Roblox)": "hero",
+  "Builderman (Roblox)": "hero", "Zizzy (Roblox Piggy)": "hero",
+  "The Guest (Roblox)": "hero",
+  "Penny Piggy (Roblox)": "villain", "Blue (Roblox Rainbow Friends)": "villain",
+  "1x1x1x1 (Roblox)": "villain", "Seek (Roblox Doors)": "villain",
+  "Figure (Roblox Doors)": "villain",
+};
+
 // Pre-defined detailed characters with localization
 const PRESET_CHARACTERS: LocalizedPreset[] = [
   // --- Modern / Realistic ---
@@ -580,6 +677,198 @@ name: { en: "The Doctor", he: "הרופא" },
       en: "Athena, the Greek goddess of wisdom, as a tall, regal woman with calm grey eyes and dark hair braided and pinned beneath a gleaming Corinthian bronze combat helmet worn tilted back on her head. She wears overlapping bronze scale armor (linothorax) over a white chiton dress. A circular shield (aspis) with the Gorgon Medusa face etched on it is on her LEFT arm. She holds a long golden spear in her RIGHT hand. An owl perches on her LEFT shoulder. Cinematic Greek mythology style.",
       he: "אתנה, אלת החכמה היוונית. אישה גבוהה ומלכותית עם עיניים אפורות שקטות ושיער כהה קלוע ותחוב מתחת לקסדת קרב קורינתית ברונזה מבריקה. לובשת שריון ברונזה דמויי קשקשים מדורגים מעל שמלת כיטון לבנה. מגן עגול (אספיס) עם פניה של מדוזה הגורגון חרוטות עליו על זרוע שמאל. מחזיקה רומח ארוך זהוב בידה הימנית. ינשוף יושב על כתפה השמאלית. סגנון מיתולוגיה יוונית."
     }
+  },
+
+  // ─── Superheroes ───────────────────────────────────────────────────────────
+  {
+    name: { en: "Spider-Man", he: "ספיידר-מן" },
+    description: {
+      en: "Peter Parker as Spider-Man, wearing the iconic red and blue suit with an intricate web pattern. Expressive white eye lenses show emotion. Photorealistic Marvel style.",
+      he: "פיטר פארקר בתור ספיידר-מן, לובש את החליפה האדומה והכחולה האייקונית עם דפוס עכביש מורכב. עדשות עיניים לבנות ביטוייות. מתנועע בין גורדי שחקים עם חוט עכביש ביד ימין, תנוחת פעולה דינמית עם העיר מתחתיו. איכות Unreal Engine, תאורה דרמטית של שקיעה, סגנון מארוול פוטוריאליסטי."
+    }
+  },
+  {
+    name: { en: "Iron Man", he: "איירון מן" },
+    description: {
+      en: "Tony Stark as Iron Man in the Mark 50 nanotech armor, highly detailed red and gold plating with sleek panels. Repulsor beams glowing intense blue in BOTH open palms. Arc reactor glowing on chest. Photorealistic 3D Marvel cinematic style.",
+      he: "טוני סטארק בתור איירון מן בשריון נאנו-טק מארק 50, ציפוי אדום וזהב מפורט מאוד עם לוחות חלקים. קרני רפולסור זוהרות בכחול עז בשתי כפות הידיים הפתוחות. כור ארק זוהר על החזה. עף דרך שמיים סוערים ודרמטיים, מואר מאחור בברק. סגנון מארוול קולנועי פוטוריאליסטי תלת-ממדי."
+    }
+  },
+  {
+    name: { en: "Batman", he: "באטמן" },
+    description: {
+      en: "Batman in a modern tactical dark grey Batsuit with ribbed armored torso, cowl with pointed ears, and a long flowing black cape. A yellow oval with a solid black bat symbol on the chest. Utility belt with golden pouches. DCEU concept art style.",
+      he: "באטמן בחליפת באט טקטית מודרנית אפורה כהה עם גוף משורין מחורץ, קסדה עם אוזניים מחודדות וגלימה שחורה ארוכה. אובל צהוב עם סמל עטלף שחור על החזה. חגורת כלים עם כיסים זהובים. סגנון DCEU."
+    }
+  },
+  {
+    name: { en: "Wonder Woman", he: "וונדר וומן" },
+    description: {
+      en: "Wonder Woman in her iconic armored costume: red bodice with golden eagle chest plate, blue star-spangled trunks, golden tiara with red star centered on forehead, silver Bracelets of Submission gleaming on both wrists, and the Lasso of Truth glowing golden at her hip. Long flowing black hair. Powerful heroic stance with arms slightly out, fierce determined expression. Cinematic DCEU style.",
+      he: "וונדר וומן בחליפה המשורינת האייקונית שלה: גוף אדום עם חזיה זהובה דמויית נשר, מכנסיים כחולים עם כוכבים, עטרת זהב עם כוכב אדום במרכז המצח, צמידי כסף מבריקים על שתי הידיים, ולאסו האמת זוהר בזהב בירך. שיער שחור ארוך וזורם. תנוחה גיבורית עוצמתית עם הבעה נחושה ורצינית. סגנון DCEU קולנועי."
+    }
+  },
+  {
+    name: { en: "Deadpool", he: "דדפול" },
+    description: {
+      en: "Deadpool in his red and black tactical mercenary suit, covered in comedic scorch marks and small bullet holes. Two katanas strapped across his back in an X formation. Two pistols in quick-draw holsters on both hips. He is breaking the fourth wall, pointing finger-guns directly at the viewer with a winking mask expression. Stylized Marvel art, dynamic comedic composition.",
+      he: "דדפול בחליפה הטקטית האדומה והשחורה שלו, מכוסה בסימני חרך קומיים וחורי כדורים קטנים. שתי קטאנות קשורות על גבו בפורמציית X. שתי אקדחות בנרתיקי שליפה מהירה על שתי הירכיים. הוא שובר את הקיר הרביעי, מכוון אקדחות אצבע ישירות אל הצופה עם הבעת מסיכה מצמצת. סגנון מארוול, קומפוזיציה קומית דינמית."
+    }
+  },
+
+  // ─── Sports ────────────────────────────────────────────────────────────────
+  {
+    name: { en: "Lionel Messi", he: "ליאונל מסי" },
+    description: {
+      en: "Lionel Messi in the Inter Miami CF pink and black home jersey with number 10. Short wavy dark brown hair and full beard slightly greying at the sides. Compact athletic physique. Mid-dribble pose with a football pressed close to his LEFT foot, calm focused expression and a slight confident smile. Photorealistic sports photography style.",
+      he: "ליאונל מסי בחולצת הבית הוורודה-שחורה של אינטר מיאמי CF עם מספר 10. שיער חום כהה גלי קצר וזקן מלא עם קצת אפור בצדדים. גוף אתלטי קומפקטי. תנוחת דריבל עם כדורגל צמוד לרגל שמאל, הבעה ממוקדת רגועה עם חיוך בטוח. סגנון צילום ספורט פוטוריאליסטי."
+    }
+  },
+  {
+    name: { en: "Cristiano Ronaldo", he: "קריסטיאנו רונאלדו" },
+    description: {
+      en: "Cristiano Ronaldo in the iconic Portugal national team dark red home jersey (number 7). Tall, powerfully built athletic frame, perfectly styled short dark hair and light stubble. His signature celebration: shirt slightly lifted showing glimpse of abs, arms wide open, chin tilted up with triumphant expression, eyes closed. Photorealistic sports photography.",
+      he: "קריסטיאנו רונאלדו בחולצת הנבחרת הלאומית של פורטוגל בצבע אדום כהה (מספר 7). מבנה גוף אתלטי גבוה ועוצמתי, שיער קצר כהה מעוצב בצורה מושלמת וזיפים קלים. חגיגת החתימה שלו: חולצה מוגבהת מעט, ידיים פרוסות רחב, סנטר מוטה מעלה עם הבעה מנצחת, עיניים עצומות. צילום ספורט פוטוריאליסטי."
+    }
+  },
+  {
+    name: { en: "LeBron James", he: "לברון ג'יימס" },
+    description: {
+      en: "LeBron James in a golden Los Angeles Lakers home jersey (number 23), massive imposing physique at 6 foot 9. Short cropped dark hair and full dark beard. Caught mid-air in a thunderous slam dunk above the basket, one hand gripping the rim, face intense and fierce. Photorealistic NBA sports photography.",
+      he: "לברון ג'יימס בחולצת הבית הזהובה של לוס אנג'לס לייקרס (מספר 23), גוף ענק ומרשים של 2.06 מטר. שיער כהה קצר וזקן כהה מלא. נתפס באוויר בדאנק עוצמתי מעל הסל, יד אחת אוחזת בשפת הסל, הפנים עזות ופראיות. צילום ספורט NBA פוטוריאליסטי."
+    }
+  },
+  {
+    name: { en: "Michael Jordan", he: "מייקל ג'ורדן" },
+    description: {
+      en: "Michael Jordan in his iconic white Chicago Bulls home jersey (number 23), recreating the legendary Jumpman silhouette: soaring through the air with one arm fully extended upward toward the basket, other arm gracefully out to the side for balance, tongue slightly sticking out in concentration. Peak athletic physique. Cinematic tribute sports art style.",
+      he: "מייקל ג'ורדן בחולצת הבית הלבנה האייקונית של שיקגו בולס (מספר 23), מחדש את צלליית ה-Jumpman האגדית: מרחף באוויר עם זרוע אחת מושטת מלאה כלפי מעלה לעבר הסל, זרוע שנייה פרוסה לצד לאיזון, לשון בולטת מעט בריכוז. גוף שיא אתלטי. סגנון אמנות ספורט קולנועי."
+    }
+  },
+  {
+    name: { en: "Neymar Jr.", he: "ניימאר ג'וניור" },
+    description: {
+      en: "Neymar Jr. in the Brazil national team iconic yellow and green home jersey with number 10. Lean athletic build, colorful elaborate tattoo sleeve visible on his LEFT arm, playful confident expression with a bright smile. His signature flamboyant hairstyle (blond-tipped mohawk). Performing a skillful rainbow-flick or freestyle trick with a football. Photorealistic sports photography style.",
+      he: "ניימאר ג'וניור בחולצת הבית הצהובה-ירוקה האייקונית של נבחרת ברזיל עם מספר 10. מבנה גוף אתלטי רזה, שרוול קעקועים צבעוני ומפורט נראה על זרועו השמאלית, הבעה שובבה ובטוחה עם חיוך בוהק. תסרוקת המוהוק הפלמבויאנטית (עם קצוות בלונדיניים). מבצע תרגיל כישרוני עם כדורגל. סגנון צילום ספורט פוטוריאליסטי."
+    }
+  },
+
+  // ─── Kids & Cartoons ───────────────────────────────────────────────────────
+  {
+    name: { en: "SpongeBob SquarePants", he: "ספוג'בוב ספוג'פאנטס" },
+    description: {
+      en: "SpongeBob SquarePants, a cheerful yellow sea sponge with large blue eyes, a wide gap-toothed smile, square-ish porous sponge body. Wearing his iconic white short-sleeve shirt, brown square pants, black shoes with white socks, and a red tie. Standing in a cheerful pose. High quality 3D Nickelodeon cartoon animation style.",
+      he: "ספוג'בוב ספוג'פאנטס, ספוג ים צהוב עליז עם עיניים כחולות גדולות, חיוך רחב עם שן חסרה, גוף ספוגי מרובע ומנוקב. לובש חולצה לבנה קצרת שרוולים, מכנסיים מרובעים חומים, נעליים שחורות עם גרביים לבנות ועניבה אדומה. עומד בתנוחה עליזה. סגנון אנימציה של ניקלודיאון תלת-ממדי איכותי."
+    }
+  },
+  {
+    name: { en: "Patrick Star", he: "פטריק סטאר" },
+    description: {
+      en: "Patrick Star, a large, round, chubby pink starfish standing upright on two short stubby legs. Heavy-lidded sleepy eyes with a perpetually relaxed, dopey expression and a wide goofy open-mouthed grin. Wearing his signature green shorts with purple flowers printed on them. Soft round belly. High quality 3D SpongeBob cartoon style.",
+      he: "פטריק סטאר, כוכב ים ורוד עגלגל ושמנמן העומד זקוף על שתי רגליים קצרות. עיניים כבדות עם הבעה מרגועה ועייפה לצמיתות, חיוך פעור ושוטה רחב. לובש מכנסיים ירוקים עם הדפס פרחים סגולים. בטן עגולה ורכה. סגנון קריקטורה תלת-ממדי של ספוג'בוב."
+    }
+  },
+  {
+    name: { en: "Ben 10 (Ben Tennyson)", he: "בן 10" },
+    description: {
+      en: "Ben Tennyson from Ben 10, a 10-year-old boy with short messy brown hair and bright green eyes. Wearing a white t-shirt with a black stripe running across the chest and dark cargo shorts. On his LEFT wrist is the Omnitrix, a large circular watch-like device with a glowing green alien face dial. Energetic confident pose, ready for action. Classic cartoon animation style, vibrant colors.",
+      he: "בן טנינסון מבן 10, ילד בן 10 עם שיער חום קצר ומבולגן ועיניים ירוקות בוהקות. לובש חולצת טי לבנה עם פס שחור לרוחב החזה ומכנסי מטען כהים. על פרק יד שמאל שלו ה-Omnitrix, התקן עגול גדול דמוי שעון עם חוגה דמויית פרצוף חייזר ירוק זוהר. תנוחה אנרגטית ובטוחה, מוכן לפעולה. סגנון אנימציה קלאסי, צבעים עזים."
+    }
+  },
+  {
+    name: { en: "Bluey", he: "בלואי" },
+    description: {
+      en: "Bluey, a young Blue Heeler puppy girl with vibrant blue fur and lighter cream-colored fur on her face, chest, and tummy. Large dark joyful eyes with an innocent happy expression. Simple round chubby cartoon body with small ears. Playful energetic pose, perhaps mid-jump or playing. High quality Ludo Studio 2D cartoon animation style.",
+      he: "בלואי, כלבלבה צעירה (Blue Heeler) עם פרווה כחולה תוססת ופרווה שמנת-בהירה על הפנים, החזה והבטן. עיניים כהות גדולות ועליזות עם הבעה תמימה ושמחה. גוף קריקטורי עגלגל ושמנמן עם אוזניים קטנות. תנוחה שובבה ואנרגטית. סגנון אנימציה 2D איכותי של Ludo Studio."
+    }
+  },
+  {
+    name: { en: "JJ (Cocomelon)", he: "JJ (קקומלון)" },
+    description: {
+      en: "JJ from Cocomelon, a tiny adorable toddler with a big round head, smooth light skin, large joyful dark eyes and chubby rosy cheeks. Wearing his signature white onesie/t-shirt with a small red, blue and green striped detail on the collar. Short straight black hair. Tiny chubby arms and legs. Sweet innocent baby expression with a bright smile. Soft warm 3D CGI Cocomelon cartoon render style.",
+      he: "JJ מקקומלון, פעוט קטנטן ומתוק עם ראש עגול וגדול, עור בהיר חלק, עיניים כהות עליזות וגדולות ולחיים שמנמנות וורדרדות. לובש גוף/חולצת טי לבנה עם פרט פסים אדום-כחול-ירוק קטן על הצווארון. שיער שחור ישר וקצר. זרועות ורגליים קטנות ושמנמנות. הבעת תינוק תמימה ומתוקה עם חיוך בוהק. סגנון רינדור CGI תלת-ממדי רך וחם של קקומלון."
+    }
+  },
+  {
+    name: { en: "Dora the Explorer", he: "דורה החוקרת" },
+    description: {
+      en: "Dora the Explorer, a cheerful 7-year-old Latina girl with short dark brown bob-cut hair and large friendly brown eyes. Wearing her iconic pink t-shirt, orange shorts, and bright yellow socks with white sneakers. A purple backpack (Backpack!) is on her back. She is holding a large map in one hand and pointing forward with the other, adventure-ready expression with a big smile. Nickelodeon cartoon animation style.",
+      he: "דורה החוקרת, ילדה לטינית עליזה בת 7 עם שיער קצר בצבע חום כהה בתספורת בוב ועיניים חומות גדולות וידידותיות. לובשת חולצת טי ורודה אייקונית, מכנסיים כתומים וגרביים צהובות בוהקות עם נעלי ספורט לבנות. תרמיל גב סגול (Backpack!) על גבה. מחזיקה מפה גדולה ביד אחת ומצביעה קדימה עם השנייה, הבעה מוכנה להרפתקאות עם חיוך גדול. סגנון אנימציה של ניקלודיאון."
+    }
+  },
+
+  // ─── Bobby, Luna, Ziggy, Poppy, Tiko (Kids — user created) ─────────────────
+  {
+    name: { en: "Bobby the Bouncing Bear", he: "בובי הדוב הקופץ" },
+    description: {
+      en: "Bobby is a cheerful, round little bear with soft sky-blue fur and a big glowing yellow belly shaped like a star. His eyes are huge, shiny, and full of curiosity, sparkling like tiny stars. Bobby wears bright red sneakers that squeak when he walks and a tiny green backpack filled with fun surprises. He loves bouncing everywhere instead of walking, laughing loudly and encouraging kids to jump and play with him. His ears wiggle every time he gets excited, and colorful butterflies often follow him wherever he goes. Cocomelon-style 3D CGI.",
+      he: "בובי הוא דוב קטן עגלגל ועליז עם פרווה רכה בצבע תכלת ובטן גדולה וזוהרת בצורת כוכב צהוב. עיניו ענקיות, מבריקות ומלאות סקרנות, מנצנצות כמו כוכבים קטנים. בובי נועל נעלי ספורט אדומות בוהקות שחורקות בהליכה ונושא תרמיל גב ירוק קטן מלא בהפתעות כיפיות. הוא אוהב לקפוץ לכל מקום במקום ללכת, לצחוק בקול ולעודד ילדים לקפוץ ולשחק איתו. האוזניים שלו מתנדנדות כל פעם שהוא נרגש, ופרפרים צבעוניים עוקבים אחריו לכל מקום. סגנון CGI תלת-ממדי בסגנון קקומלון."
+    }
+  },
+  {
+    name: { en: "Luna the Rainbow Bunny", he: "לונה ארנבת הקשת" },
+    description: {
+      en: "Luna is a magical bunny with fluffy rainbow-colored fur that gently changes shades like a moving rainbow. Her long ears sparkle with tiny glowing stars at the tips. She wears a purple dress with glittering clouds and sparkly silver shoes. Luna loves singing sweet songs and dancing in circles, leaving behind little floating rainbow bubbles that make kids giggle. Her big pink eyes glow warmly and make every child feel happy and safe. Cocomelon-style 3D CGI.",
+      he: "לונה היא ארנבת קסומה עם פרווה פלאפית בצבעי הקשת המשנה גוונים בעדינות כמו קשת נעה. האוזניים הארוכות שלה מנצנצות עם כוכבים זוהרים קטנטנים בקצוות. היא לובשת שמלה סגולה עם עננים מנצנצים ונעליים כסופות ומבריקות. לונה אוהבת לשיר שירים מתוקים ולרקוד במעגלים, ומשאירה אחריה בועות קשת קטנות מרחפות שגורמות לילדים לצחקק. עיניה הורודות הגדולות זוהרות בחמימות וגורמות לכל ילד להרגיש שמח ובטוח. סגנון CGI תלת-ממדי בסגנון קקומלון."
+    }
+  },
+  {
+    name: { en: "Ziggy the Zooming Zebra", he: "זיגי הזברה המהירה" },
+    description: {
+      en: "Ziggy is a playful zebra with black and neon-blue glowing stripes that light up when he runs fast. He has a bright orange mohawk mane and wears cool green roller skates that leave colorful streaks behind him. Ziggy talks fast, laughs loudly, and loves racing his friends across sunny fields. His stripes flash different colors whenever he's excited, making him look like a living rainbow racetrack. Cocomelon-style 3D CGI.",
+      he: "זיגי הוא זברה שובבה עם פסים שחורים וכחול-ניאון זוהרים שמאירים כשהוא רץ מהר. יש לו רעמה בצבע כתום בוהק בסגנון מוהוק ונועל גלגיליות ירוקות מגניבות שמשאירות אחריהן פסים צבעוניים. זיגי מדבר מהר, צוחק בקול ואוהב לרוץ עם חבריו בשדות שטופי שמש. הפסים שלו מהבהבים בצבעים שונים כל פעם שהוא נרגש. סגנון CGI תלת-ממדי בסגנון קקומלון."
+    }
+  },
+  {
+    name: { en: "Poppy the Bubble Panda", he: "פופי פנדת הבועות" },
+    description: {
+      en: "Poppy is a cuddly panda with super soft white fur and pastel pink patches around her eyes and ears. She wears a turquoise hoodie with tiny bubble patterns and carries a bubble wand shaped like a star in her RIGHT paw. Poppy loves blowing magical bubbles that float through the air and show funny tiny pictures inside them—like dancing ducks or flying cupcakes. Kids love watching her bubbles pop into glittery sparkles. Cocomelon-style 3D CGI.",
+      he: "פופי היא פנדה חמודה עם פרווה לבנה רכה מאוד וכתמים ורודים פסטליים סביב עיניה ואוזניה. היא לובשת קפוצ'ון טורקיז עם דפוס בועות קטנות ומחזיקה מטה בועות בצורת כוכב בכפת ידה הימנית. פופי אוהבת לנפח בועות קסומות שמרחפות באוויר ומציגות תמונות מצחיקות קטנות בתוכן. ילדים אוהבים לראות את הבועות שלה מתפוצצות לנצנצים. סגנון CGI תלת-ממדי בסגנון קקומלון."
+    }
+  },
+  {
+    name: { en: "Tiko the Giggle Turtle", he: "טיקו צב הצחוקים" },
+    description: {
+      en: "Tiko is a tiny turtle with a bright lime-green shell covered in colorful glowing shapes—stars, hearts, and lightning bolts. His skin is soft mint green, and he has huge joyful eyes and a constant giggle. Tiko wears a yellow cap turned sideways and tiny blue shoes. Even though turtles are slow, Tiko surprises everyone by zooming around quickly when he laughs. Every time he giggles, the shapes on his shell light up like a cheerful disco party. Cocomelon-style 3D CGI.",
+      he: "טיקו הוא צב קטנטן עם קליפה ירוק לים בוהקת המכוסה בצורות גלויות צבעוניות — כוכבים, לבבות וברקים. עורו ירוק-מנטה רך ויש לו עיניים ענקיות עליזות וצחוק תמידי. טיקו חובש כובע צהוב מסובב הצידה ונועל נעליים כחולות קטנטנות. אף על פי שצבים הם איטיים, טיקו מפתיע את כולם בזינוק מהיר כשהוא צוחק. בכל פעם שהוא מצחקק, הצורות על הקליפה שלו מאירות כמו מסיבת דיסקו עליזה. סגנון CGI תלת-ממדי בסגנון קקומלון."
+    }
+  },
+
+  // ─── Dinosaur Kids Characters (user created) ───────────────────────────────
+  {
+    name: { en: "Bubbles the Baby Brontosaurus", he: "באבלס ברונטוזאורוס התינוק" },
+    description: {
+      en: "Bubbles is a tiny, chubby brontosaurus with soft pastel mint-green skin and a round, squishy body that jiggles when he walks. His long neck bends gently like a friendly noodle, and his big sparkling blue eyes are always full of wonder. Along his back are tiny rainbow-colored bumps that glow softly when he laughs. Bubbles loves blowing colorful soap bubbles from his mouth that float through the air and pop into glittery sparkles. Kids adore hugging his extra-soft marshmallow-like belly. Cocomelon-style 3D CGI.",
+      he: "באבלס הוא ברונטוזאורוס קטנטן ושמנמן בעל עור רך בצבע ירוק-מנטה פסטלי וגוף עגלגל ורך הרוטט בהליכה. צווארו הארוך מתכופף בעדינות כמו נודלה ידידותית, ועיניו הכחולות המנצנצות הגדולות מלאות תמיד בתמיהה. לאורך גבו גבשושיות קטנות בצבעי הקשת שזוהרות בעדינות כשהוא צוחק. באבלס אוהב לנפח בועות סבון צבעוניות מפיו שמרחפות באוויר ומתפוצצות לנצנצים. ילדים מעריצים לחבק את בטנו הרכה כמו מרשמלו. סגנון CGI קקומלון."
+    }
+  },
+  {
+    name: { en: "Sunny the Smiling Stegosaurus", he: "סאני סטגוזאורוס המחייך" },
+    description: {
+      en: "Sunny is a bright and joyful stegosaurus with warm golden-yellow skin and big candy-colored plates along his back in pink, blue, and purple. His face is round and adorable with a constant happy smile and big rosy cheeks. When he walks, his plates gently wobble like jelly. Sunny loves dancing and clapping his tiny dinosaur feet, making his plates glow softly like happy lights. He always spreads warmth and giggles everywhere he goes. Cocomelon-style 3D CGI.",
+      he: "סאני הוא סטגוזאורוס בהיר ועליז בעל עור זהוב-חמים ולוחות גדולים בצבעי ממתקים לאורך גבו בוורוד, כחול וסגול. פניו עגולות ומתוקות עם חיוך שמח תמידי ולחיים ורדרדות גדולות. בהליכה, הלוחות שלו מתנדנדים בעדינות כמו ג'לי. סאני אוהב לרקוד ולהכות כפות ברגליו הקטנות של דינוזאור, מה שגורם ללוחות לזהור בעדינות כמו אורות שמחים. הוא תמיד מפיץ חמימות וצחוקים לכל מקום. סגנון CGI קקומלון."
+    }
+  },
+  {
+    name: { en: "Peanut the Tiny T-Rex", he: "פינאט טי-רקס קטנטן" },
+    description: {
+      en: "Peanut is the cutest little T-Rex ever, with a round orange body and tiny wiggly arms that barely reach his tummy. His big green eyes sparkle with playful mischief, and his small white teeth peek out when he giggles. Peanut wears a bright blue baby scarf with little stars around his neck, and when he tries to roar, it comes out as the most adorable tiny squeaky roar that makes everyone laugh. His soft chubby tail sways happily when he runs. Cocomelon-style 3D CGI.",
+      he: "פינאט הוא הטי-רקס הכי חמוד אי פעם, עם גוף כתום עגלגל וזרועות קטנות ומתנדנדות שבקושי מגיעות לבטנו. עיניו הירוקות הגדולות מנצנצות בשובבות שובבה, ושיניו הקטנות הלבנות מציצות כשהוא מצחקק. פינאט עונד צעיף תינוק כחול בוהק עם כוכבים קטנים סביב צווארו, וכשהוא מנסה לשאוג, זה יוצא כשאגה חרקצרצרה ומתוקה שגורמת לכולם לצחוק. זנבו השמנמן הרך מתנדנד בשמחה בריצה. סגנון CGI קקומלון."
+    }
+  },
+  {
+    name: { en: "Lulu the Lavender Triceratops", he: "לולו טריצרטופס הלבנדר" },
+    description: {
+      en: "Lulu is a gentle triceratops with smooth lavender-purple skin and three tiny shiny pastel horns that look more like cute decorations than spikes. Her big round eyes glow warm pink, and her cheeks are always slightly blushing. She has a frilly collar around her head with rainbow polka dots that wiggle when she laughs. Lulu loves giving gentle cuddly hugs with her big round head and making soft happy humming sounds. Cocomelon-style 3D CGI.",
+      he: "לולו היא טריצרטופס עדינה בעלת עור חלק בצבע לבנדר-סגול ושלוש קרניים פסטליות קטנות ומבריקות שנראות יותר כמו קישוטים חמודים מאשר קוצים. עיניה הגדולות והעגלגלות זוהרות בוורוד חמים, ולחייה תמיד שטופות בסומק. יש לה צווארון מקומט סביב ראשה עם נקודות קשת שמתנדנדות כשהיא צוחקת. לולו אוהבת לחבק בעדינות עם ראשה הגדול והעגלגל ולהוציא צלילי המהום רכים ושמחים. סגנון CGI קקומלון."
+    }
+  },
+  {
+    name: { en: "Twinkle the Sparkle Pterodactyl", he: "טווינקל הפטרודקטיל המנצנץ" },
+    description: {
+      en: "Twinkle is a playful baby pterodactyl with soft sky-blue wings sprinkled with tiny glowing star patterns. His body is fluffy and round, and his wings make gentle glitter trails when he flaps them. He has huge curious purple eyes and a tiny beak that chirps cheerful sounds instead of screeches. Twinkle loves flying slowly in circles above his friends and showering them with sparkling star dust that makes everyone giggle. Cocomelon-style 3D CGI.",
+      he: "טווינקל הוא פטרודקטיל תינוק שובב עם כנפיים רכות בצבע תכלת מפוזרות בדפוסי כוכבים זוהרים קטנים. גופו פרוותי ועגלגל, והכנפיים שלו יוצרות שביל של נצנצים בעדינות בעת הנפנוף. יש לו עיניים סגולות ענקיות וסקרניות ומקור קטנטן שצ'ירפ צלילים עליזים במקום צרחות. טווינקל אוהב לעוף לאט במעגלים מעל חבריו ולהלביש אותם באבקת כוכבים מנצנצת שגורמת לכולם לצחקק. סגנון CGI קקומלון."
+    }
   }
 ];
 
@@ -595,6 +884,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ config, setConfig, onSubmit, isLo
   const [customCharacters, setCustomCharacters] = useState<Character[]>([]);
   const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [activeGroup, setActiveGroup] = useState<string>('all');
 
   const t = translations[lang];
 
@@ -1104,25 +1394,63 @@ const SetupForm: React.FC<SetupFormProps> = ({ config, setConfig, onSubmit, isLo
                     </div>
                 )}
 
-                {/* System Presets */}
-                <div>
-                     <h4 className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide px-1 sticky top-0 bg-slate-900 z-10">{t.systemPresets}</h4>
-                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {PRESET_CHARACTERS.map((preset, idx) => (
-                        <button 
-                            key={idx}
-                            onClick={() => addPresetCharacter(preset)}
-                            className="flex flex-col items-start gap-1 p-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 transition-all text-left group"
-                        >
-                            <span className="text-xs font-bold text-slate-300 group-hover:text-white">
-                                {preset.name[lang]}
-                            </span>
-                            <span className="text-[10px] text-slate-500 line-clamp-2 leading-tight">
-                                {preset.description[lang]}
-                            </span>
-                        </button>
-                        ))}
-                    </div>
+                {/* System Presets with group filter chips */}
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">{t.systemPresets}</h4>
+                  {/* Filter chips */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {CHARACTER_GROUPS.map(group => (
+                      <button
+                        key={group.id}
+                        onClick={() => setActiveGroup(group.id)}
+                        className={`flex-shrink-0 text-[11px] px-2.5 py-1 rounded-full font-semibold transition-colors whitespace-nowrap ${
+                          activeGroup === group.id
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        {group.label[lang]}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Character grid — filtered + optional hero/villain subgroups */}
+                  {(() => {
+                    const filtered = PRESET_CHARACTERS.filter(p => activeGroup === 'all' || GROUP_MAP[p.name.en] === activeGroup);
+                    const showSubs = (activeGroup === 'minecraft' || activeGroup === 'roblox');
+                    const CARD = (preset: LocalizedPreset, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={() => addPresetCharacter(preset)}
+                        className="flex flex-col items-start gap-1 p-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 transition-all text-left group"
+                      >
+                        <span className="text-xs font-bold text-slate-300 group-hover:text-white line-clamp-1">{preset.name[lang]}</span>
+                        <span className="text-[10px] text-slate-500 line-clamp-2 leading-tight">{preset.description[lang]}</span>
+                      </button>
+                    );
+                    if (showSubs) {
+                      const heroes = filtered.filter(p => SUBGROUP_MAP[p.name.en] === 'hero');
+                      const villains = filtered.filter(p => SUBGROUP_MAP[p.name.en] === 'villain');
+                      const other = filtered.filter(p => !SUBGROUP_MAP[p.name.en]);
+                      return (
+                        <div className="flex flex-col gap-3">
+                          {other.length > 0 && <div className="grid grid-cols-2 md:grid-cols-3 gap-2">{other.map(CARD)}</div>}
+                          {heroes.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-green-400 mb-1.5 px-0.5">🟢 {lang === 'he' ? 'גיבורים' : 'Heroes'}</p>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">{heroes.map(CARD)}</div>
+                            </div>
+                          )}
+                          {villains.length > 0 && (
+                            <div>
+                              <p className="text-[10px] font-bold text-red-400 mb-1.5 px-0.5">🔴 {lang === 'he' ? 'נבלים' : 'Villains'}</p>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">{villains.map(CARD)}</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return <div className="grid grid-cols-2 md:grid-cols-3 gap-2">{filtered.map(CARD)}</div>;
+                  })()}
                 </div>
               </div>
             )}

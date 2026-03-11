@@ -264,6 +264,16 @@ const getEnginePromptLogic = (engine: TargetEngine): string => {
 };
 
 /**
+ * Extracts the [IMG]...[/IMG] block from a visualPrompt for still-image generation.
+ * This avoids a separate thumbnailPrompt field — the image prompt is embedded in the video prompt.
+ * Falls back to the full visualPrompt for legacy scenes that lack the tag.
+ */
+export const extractImagePrompt = (visualPrompt: string): string => {
+  const match = visualPrompt.match(/\[IMG\]([\s\S]*?)\[\/IMG\]/i);
+  return match ? match[1].trim() : visualPrompt;
+};
+
+/**
  * Streams the series structure generation.
  * ALL config settings are injected into every scene prompt for perfect visual continuity.
  */
@@ -512,7 +522,21 @@ SECTION 5 — CAMERA LINE (mandatory final line):
 ${config.showSubtitles ? `\nSECTION 6 — SUBTITLE LINE (mandatory):\n  "Render all spoken text as burned-in subtitles at the bottom of the frame in ${contentLangLabel}."` : ''}
 
 ENGINE NOTE: ${engineLogic}
+
+════════════════════ [IMG] TAG — EMBEDDED THUMBNAIL MARKER ══════════════════
+Inside EVERY visualPrompt, after SECTION 1 (CHARACTER DNA), embed a self-contained
+still-image block using [IMG]...[/IMG] tags. This block is extracted automatically
+to generate the scene thumbnail — NO extra API call.
+
+RULES FOR [IMG] block:
+1. Copy the FULL character DNA verbatim (face, hair, clothing, accessories — every character in scene).
+2. Copy the FULL environment description (lighting, set, atmosphere, props).
+3. End with: "Visual style: ${config.style}. Style keywords: ${styleKeywords}. ${config.camera}, static frame. Aspect ratio: ${config.aspectRatio}."
+4. FORBIDDEN inside [IMG]: motion verbs (walks/runs/pans/zooms), time references (over Xs / in the first 2s), dialogue, camera movement commands.
+5. The block must be fully self-contained — usable as a standalone image prompt with no other context.
+6. Keep it concise: 80–150 words.
 `;
+
 
   // ── Schema ─────────────────────────────────────────────────────────────
   const schema = {
@@ -610,7 +634,7 @@ export const generateSceneImage = async (prompt: string, aspectRatio: string, ch
 
     try {
         const response = await withRetry(() => ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
+            model: 'gemini-2.5-flash-preview-image-generation',
             contents: { parts: [{ text: consistencyPrompt }] },
             config: { imageConfig: { aspectRatio: targetAspectRatio } }
         })) as GenerateContentResponse;
@@ -678,14 +702,9 @@ export const generateEpisodeVideo = async (
       if (!videoUri) throw new Error('No video URI returned from generation');
 
       // Fetch video as a blob URL so the API key never appears in the DOM or src attributes
-      try {
-        const videoResponse = await fetch(`${videoUri}&key=${getVideoApiKey()}`);
-        if (!videoResponse.ok) throw new Error(`Video fetch failed: ${videoResponse.status}`);
-        const videoBlob = await videoResponse.blob();
-        return URL.createObjectURL(videoBlob);
-      } catch {
-        // Fallback: return URI directly (key still goes through network, but not in DOM)
-        return `${videoUri}&key=${getVideoApiKey()}`;
-      }
+      const videoResponse = await fetch(`${videoUri}&key=${getVideoApiKey()}`);
+      if (!videoResponse.ok) throw new Error(`Video fetch failed: ${videoResponse.status}`);
+      const videoBlob = await videoResponse.blob();
+      return URL.createObjectURL(videoBlob);
   } catch (error) { throw error; }
 };

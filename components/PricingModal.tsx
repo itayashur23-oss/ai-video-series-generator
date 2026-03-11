@@ -146,14 +146,10 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                         </ul>
                         <button 
                             onClick={() => handleSelect('pro')}
-                            disabled={currentUser?.plan === 'pro' || loadingPlan === 'pro'}
-                            className={`w-full py-3 rounded-lg font-bold text-sm transition-all shadow-lg ${
-                                currentUser?.plan === 'pro'
-                                ? 'bg-indigo-900/50 text-indigo-300 border border-indigo-800 cursor-default'
-                                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/50'
-                            }`}
+                            disabled={true}
+                            className="w-full py-3 rounded-lg font-bold text-sm transition-all shadow-lg bg-indigo-900/30 text-indigo-400 border border-indigo-800/50 cursor-not-allowed"
                         >
-                            {loadingPlan === 'pro' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (currentUser?.plan === 'pro' ? t.currentPlan : t.selectPlan)}
+                            {t.comingSoon}
                         </button>
                     </div>
 
@@ -177,14 +173,10 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                         </ul>
                         <button 
                             onClick={() => handleSelect('studio')}
-                            disabled={currentUser?.plan === 'studio' || loadingPlan === 'studio'}
-                            className={`w-full py-3 rounded-lg font-bold text-sm transition-all border ${
-                                currentUser?.plan === 'studio' 
-                                ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-default' 
-                                : 'bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white border-slate-600'
-                            }`}
+                            disabled={true}
+                            className="w-full py-3 rounded-lg font-bold text-sm transition-all border bg-slate-800/50 text-slate-500 border-slate-700 cursor-not-allowed"
                         >
-                            {loadingPlan === 'studio' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (currentUser?.plan === 'studio' ? t.currentPlan : t.selectPlan)}
+                            {t.comingSoon}
                         </button>
                     </div>
                 </div>
@@ -213,11 +205,10 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                         <div className="mt-auto w-full">
                             <p className="text-xs text-slate-400 mb-3">{t.tokenCost}</p>
                             <button 
-                                onClick={() => handleBuyTokens(100)}
-                                disabled={loadingTokens !== null}
-                                className="w-full bg-slate-700 hover:bg-white hover:text-slate-900 text-white font-bold py-2 rounded-lg transition-colors"
+                                disabled={true}
+                                className="w-full bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed font-bold py-2 rounded-lg"
                             >
-                                {loadingTokens === 100 ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `${t.buyFor} $15`}
+                                {t.comingSoon}
                             </button>
                         </div>
                     </div>
@@ -225,7 +216,7 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                     {/* Medium Pack (Best Value) */}
                     <div className="bg-gradient-to-b from-indigo-900/40 to-slate-900 p-6 rounded-xl border border-indigo-500/30 flex flex-col items-center text-center relative hover:border-indigo-500 transition-colors">
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                            BEST VALUE
+                            {t.bestValue}
                         </div>
                         <div className="w-16 h-16 bg-indigo-900/50 rounded-full flex items-center justify-center mb-4 text-indigo-200">
                              <Gem className="w-8 h-8" />
@@ -237,11 +228,10 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                         <div className="mt-auto w-full">
                              <p className="text-xs text-slate-400 mb-3">{t.tokenCost}</p>
                             <button 
-                                onClick={() => handleBuyTokens(500)}
-                                disabled={loadingTokens !== null}
-                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition-colors shadow-lg shadow-indigo-900/50"
+                                disabled={true}
+                                className="w-full bg-indigo-900/30 text-indigo-400 border border-indigo-800/50 cursor-not-allowed font-bold py-2 rounded-lg"
                             >
-                                {loadingTokens === 500 ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `${t.buyFor} $60`}
+                                {t.comingSoon}
                             </button>
                         </div>
                     </div>
@@ -258,11 +248,10 @@ const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onSelectPl
                         <div className="mt-auto w-full">
                             <p className="text-xs text-slate-400 mb-3">{t.tokenCost}</p>
                             <button 
-                                onClick={() => handleBuyTokens(1200)}
-                                disabled={loadingTokens !== null}
-                                className="w-full bg-slate-700 hover:bg-white hover:text-slate-900 text-white font-bold py-2 rounded-lg transition-colors"
+                                disabled={true}
+                                className="w-full bg-slate-800/50 text-slate-500 border border-slate-700 cursor-not-allowed font-bold py-2 rounded-lg"
                             >
-                                {loadingTokens === 1200 ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `${t.buyFor} $130`}
+                                {t.comingSoon}
                             </button>
                         </div>
                     </div>

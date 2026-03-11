@@ -15,7 +15,8 @@ const PREFS_KEY = (uid: string) => `storystream_prefs_${uid}`;
  */
 export const supabaseUserToAppUser = (sbUser: SupabaseUser): User => {
   const raw  = localStorage.getItem(PREFS_KEY(sbUser.id));
-  const prefs = raw ? JSON.parse(raw) : {};
+  let prefs = {};
+  try { prefs = raw ? JSON.parse(raw) : {}; } catch { prefs = {}; }
   return {
     id:     sbUser.id,
     email:  sbUser.email ?? '',

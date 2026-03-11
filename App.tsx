@@ -10,12 +10,30 @@ import TrendingModal from './components/TrendingModal';
 import ApiKeyModal from './components/ApiKeyModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import OnboardingTooltip from './components/OnboardingTooltip';
-import { generateSeriesStructureStream, generateEpisodeVideo, generateSceneImage, generateSceneAudio, API_KEY_STORAGE } from './services/geminiService';
+import { generateSeriesStructureStream, generateEpisodeVideo, generateSceneImage, generateSceneAudio, extractImagePrompt, API_KEY_STORAGE } from './services/geminiService';
 import { onAuthChange, getCurrentSession, signOut as supabaseSignOut, supabaseUserToAppUser, saveUserPrefs } from './services/supabaseService';
 import { Film, Sparkles, Key, History, Globe, User as UserIcon, LogOut, CreditCard, Coins, Flame, CheckCircle, XCircle } from 'lucide-react';
 import { translations } from './translations';
 
 const HISTORY_KEY = 'storystream_history';
+
+// Strips heavy binary fields (base64 images, blob URLs) from scenes before
+// persisting to localStorage. Text data (prompts, dialogue) is always kept.
+const stripForStorage = (item: SavedSeries): SavedSeries => ({
+  ...item,
+  episodes: item.episodes.map(ep => ({
+    ...ep,
+    scenes: ep.scenes.map(sc => ({
+      ...sc,
+      startImage: undefined,
+      startImageMimeType: undefined,
+      lastFrame: undefined,
+      lastFrameMimeType: undefined,
+      videoUrl: undefined,
+      audioUrl: undefined,
+    }))
+  }))
+});
 
 const App: React.FC = () => {
   const [config, setConfig] = useState<SeriesConfig>({
@@ -95,9 +113,13 @@ const App: React.FC = () => {
         episodes: fullEpisodes
       };
       const newHistory = [newItem, ...history];
-      if (newHistory.length > 50) newHistory.pop(); // Increased limit slightly for imports
+      if (newHistory.length > 50) newHistory.pop();
       setHistory(newHistory);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory.map(stripForStorage)));
+      } catch {
+        // If storage is still full after stripping, silently ignore — state is still updated
+      }
     } catch (e) {
       console.error("Failed to save history", e);
     }
@@ -122,8 +144,15 @@ const App: React.FC = () => {
       
       // Limit total items (e.g., 100)
       const finalHistory = mergedHistory.slice(0, 100);
-      
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(finalHistory));
+
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(finalHistory.map(stripForStorage)));
+      } catch {
+        // Storage quota exceeded — try saving just the newest 20 items
+        try {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(finalHistory.slice(0, 20).map(stripForStorage)));
+        } catch { /* ignore */ }
+      }
       return finalHistory;
     });
   };
@@ -242,7 +271,8 @@ const App: React.FC = () => {
       const scene = episode.scenes.find(s => s.id === sceneId);
       if (!scene || scene.status === 'generating_image') return;
 
-      const promptToUse = (config.contentLanguage === 'he' && scene.hebrewVisualPrompt) ? scene.hebrewVisualPrompt : scene.visualPrompt;
+      // Extract the [IMG]...[/IMG] static block from visualPrompt (no extra API call)
+      const promptToUse = extractImagePrompt(scene.visualPrompt);
 
       handleUpdateScene(episodeId, sceneId, { status: 'generating_image' });
       try {
@@ -319,7 +349,7 @@ const App: React.FC = () => {
         promptToUse,
         config.aspectRatio,
         config.videoDuration,
-        (status) => console.log(status),
+        () => {},
         lang,
         characterImages,
         startImageContext,

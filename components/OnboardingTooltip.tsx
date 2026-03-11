@@ -10,7 +10,7 @@ interface OnboardingTooltipProps {
 
 const STEPS = [
   { titleKey: 'onboardingStep1Title', bodyKey: 'onboardingStep1Body', icon: '🎬' },
-  { titleKey: 'onboardingStep2Title', bodyKey: 'onboardingStep2Body', icon: '🤖' },
+  { titleKey: 'onboardingStep2Title', bodyKey: 'onboardingStep2Body', icon: '📋' },
   { titleKey: 'onboardingStep3Title', bodyKey: 'onboardingStep3Body', icon: '🎨' },
   { titleKey: 'onboardingStep4Title', bodyKey: 'onboardingStep4Body', icon: '🚀' },
 ] as const;
